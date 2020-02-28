@@ -1,36 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace SocketHook
 {
     public class HookInterface : MarshalByRefObject
     {
-        private int _count;
+        public HookInterface(ILogger logger) => _logger = logger;
+        private readonly ILogger _logger;
 
-        public void NotifyInstalled(string processName) => Console.WriteLine($"Successfully injected to {processName}.exe !");
+        public void NotifyInstalled(string processName, int pid) => _logger?.LogInformation($"Successfully injected to {processName}.exe with pid={pid} !");
+        public void LogInformation(string message) => _logger?.LogInformation(message);
+        public void LogWarning(string message) => _logger?.LogWarning(message);
+        public void LogDebug(string message) => _logger?.LogDebug(message);
 
-        public void Message(string message) => Console.WriteLine(message);
-
-        public void OnError(Exception ex) => Console.WriteLine(ex.ToString());
-
-        /// <summary>
-        /// Called to confirm that the IPC channel is still open / host application has not closed
-        /// </summary>
-        public void Ping()
+        public void OnError(Exception ex)
         {
-            // Output token animation to visualise Ping
-            var oldTop = Console.CursorTop;
-            var oldLeft = Console.CursorLeft;
-            Console.CursorVisible = false;
-
-            var chars = "\\|/-";
-            Console.Write(chars[_count++ % chars.Length]);
-
-            Console.SetCursorPosition(oldLeft, oldTop);
-            Console.CursorVisible = true;
+            _logger?.LogError($"An unhandled exception happened with reason : {ex.Message}");
+            _logger?.LogDebug(ex.ToString());
         }
     }
 }
